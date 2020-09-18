@@ -359,6 +359,53 @@ public class Game {
 			System.out.println("Could not connect 3 players");
 		}
 		
+		try {
+			//play turns until someone reach 6000 points
+			int playerNum = 0;
+			System.out.println("Game Starting!");
+			int finalRounds = 2;
+			int[] curDice = {1};
+
+			while(finalRounds >= 0) {
+				//draw Fortune card & first roll.
+				this.fortune = this.drawFortune();
+				curDice = this.firstRoll();				
+				//send back fortune & dice info
+				int skulls = Game.countObject(Object.SKULL, this.fortune, this.fortuneIndicator, curDice);
+				
+		        //send back initial info
+		        if (skulls >= 4 && this.fortune != Fortune.SEABATTLE) {
+			        //SKULL OF ISLAND
+					this.sendRequest(playerNum, RequestCode.ISLAND_OF_SKULLS, curDice, this.turnDeductScore(curDice));
+		        } else {
+		        	//NORMAL TURN
+					this.sendRequest(playerNum, RequestCode.NORMAL, curDice, this.turnTotalScore(curDice));
+		        }
+				
+				//Handle client requests until turn ends
+		        boolean playTurn = true;
+		        while(playTurn) {
+					Gamedata gd = (Gamedata) this.clients[playerNum].inStream.readObject();
+					switch(gd.code) {
+						case REROLL:
+							//re roll
+							break;
+						case PUT_IN:
+							//Put dice in the chest 
+							break;
+						case TAKE_OUT:
+							//Take dice out of the chest
+							break;
+						default:
+							playTurn = false;
+							break;
+					}
+		        }			
+			}
+		} catch (IOException ex) {
+			System.out.println("Disconnected");
+		}
+		
 	}
 }
 

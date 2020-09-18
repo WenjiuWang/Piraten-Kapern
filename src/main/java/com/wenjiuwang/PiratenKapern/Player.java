@@ -39,6 +39,7 @@ public class Player {
 		String name = scan.next();
 		Player player = new Player(name);
 		player.connectServer();
+		player.playGame();
 	}
 	
 	/*
@@ -64,6 +65,48 @@ public class Player {
 			System.out.println("Connected.");
 		} catch (IOException ex) {
 			System.out.println("Fails to connect.");
+		}
+	}
+	
+	/*
+	 * Game Loop - Player side
+	 */
+	private void playGame() throws ClassNotFoundException {
+		boolean playing = true;
+		while (playing) {
+			RequestCode code = RequestCode.NORMAL;
+			try {
+				Gamedata gd = (Gamedata) this.inStream.readObject();
+				this.dice = gd.data.clone();
+				this.fortune = gd.fortune;
+				this.turnScore = gd.score;
+				this.fortuneIndicator = gd.fortuneIndicator;
+	    	    code = gd.code;
+				this.printInfo();
+			} catch (IOException ex) {
+				System.out.println("Lost server connection.");
+				ex.printStackTrace();
+			}
+			switch(code) {
+				case LOSE:
+					System.out.println("You Lose!");
+					playing = false;
+					break;
+				case WIN:
+					System.out.println("You Win!");
+					playing = false;
+					break;
+					
+				case ISLAND_OF_SKULLS:
+					//Island of Skulls
+					break;
+				
+				case DEDUCT:
+					break;
+					
+				default: //normal turn
+					break;
+			}
 		}
 	}
 	
