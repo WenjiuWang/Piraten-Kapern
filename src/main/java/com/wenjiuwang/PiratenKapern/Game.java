@@ -1,6 +1,10 @@
 package com.wenjiuwang.PiratenKapern;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 public class Game {
 
@@ -18,6 +22,13 @@ public class Game {
 			Fortune.MONKEYBUSINESS, Fortune.MONKEYBUSINESS, Fortune.MONKEYBUSINESS, Fortune.MONKEYBUSINESS,
 			Fortune.SKULLS, Fortune.SKULLS, Fortune.SKULLS, Fortune.SKULLS, Fortune.SKULLS,
 			Fortune.SEABATTLE, Fortune.SEABATTLE, Fortune.SEABATTLE, Fortune.SEABATTLE, Fortune.SEABATTLE, Fortune.SEABATTLE};
+	
+	int [] skullIndicator = { 1, 1, 1, 2, 2 };
+	int [] battleIndicator = { 2, 2, 3, 3, 4, 4 };
+	
+	int fortuneCount = 0;
+	int skullCount = 0;
+	int battleCount = 0;
 	
 	/*
 	 * Constructor
@@ -190,4 +201,63 @@ public class Game {
 		return result * 100;
 	}
 	
+	/*
+	 * Game Logic - Dice & Fortune Card
+	 */
+	
+	public int[] firstRoll() {
+		int[] dice1 = { 0, 0, 0, 0, 0, 0, 0, 0};
+		int[] pos = {1,2,3,4,5,6,7,8};
+		return reroll(dice1, pos);
+	}
+	
+	public int[] reroll(int[] dice, int[] rollPos) {
+	    Random rand = new Random();
+        for (int i = 0; i < rollPos.length; i++) { 
+        	if (dice[rollPos[i]-1] - 1 != Object.SKULL.ordinal()) {
+                dice[rollPos[i]-1] = rand.nextInt(6) + 1;
+        	} else if (this.fortune == Fortune.SORCERESS) {
+                dice[rollPos[i]-1] = rand.nextInt(6) + 1;
+                this.fortune = Fortune.NONE;
+        	}
+        }
+     
+		return dice;
+	}
+	
+	public void shuffleFortune() {
+		List<Fortune> fortuneList = Arrays.asList(this.fortunePile);
+		Collections.shuffle(fortuneList);
+		this.fortunePile = fortuneList.toArray(this.fortunePile);
+		
+		List<Integer> skullList = new ArrayList<>();
+		for (int i = 0; i < this.skullIndicator.length; i++) {
+			skullList.add(this.skullIndicator[i]);
+		}
+		Collections.shuffle(skullList);
+		this.skullIndicator = skullList.stream().mapToInt(i -> i).toArray();
+		
+		List<Integer> battleList = new ArrayList<>();
+		for (int i = 0; i < this.battleIndicator.length; i++) {
+			battleList.add(this.battleIndicator[i]);
+		}
+		Collections.shuffle(battleList);
+		this.battleIndicator = battleList.stream().mapToInt(i -> i).toArray();
+
+	}
+
+	public Fortune drawFortune() {
+	    Fortune f = this.fortunePile[this.fortuneCount];
+	    if (f == Fortune.SEABATTLE) {
+	    	this.fortuneIndicator = this.battleIndicator[this.battleCount];
+	    	this.skullCount = (this.skullCount < 4) ? this.skullCount += 1 : 0;
+	    } else if (f == Fortune.SKULLS) {
+	    	this.fortuneIndicator = this.skullIndicator[this.skullCount];
+	    	this.battleCount = (this.battleCount < 5) ? this.battleCount += 1 : 0;
+	    } else {
+	    	this.fortuneIndicator = 0;
+	    }
+	    this.fortuneCount = (this.fortuneCount < 34) ? this.fortuneCount += 1 : 0;
+		return f;
+	}
 }
