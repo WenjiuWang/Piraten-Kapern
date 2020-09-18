@@ -325,6 +325,15 @@ public class Game {
 		
 	}
 	
+	public void sendRequest(int playernum, RequestCode code, int[] info, int s) {
+		try {
+			this.clients[playernum].outStream.writeObject(new Gamedata(code, this.fortune, this.fortuneIndicator, info, s));
+	        this.clients[playernum].outStream.flush();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	/*
 	 * Game Loop - Server side
 	 */

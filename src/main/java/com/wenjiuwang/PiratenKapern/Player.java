@@ -44,6 +44,16 @@ public class Player {
 	/*
 	 * Networking
 	 */
+	public void sendRequest(RequestCode code, int[] info) {
+		try {
+			Gamedata data = new Gamedata(code, this.fortune, this.fortuneIndicator, info, this.turnScore);
+        	this.outStream.writeObject(data);
+       		this.outStream.flush();
+       	} catch (IOException ex) {
+			System.out.println("Failed to send request to server");
+			ex.printStackTrace();
+		}
+	}
 	
 	public void connectServer() {
 		System.out.println("Connecting to game server ...");
