@@ -9,6 +9,25 @@ public class ScoringTest
 	Game game = new Game();
 	
 	/*
+	 * test winner 
+	 */
+	public void testWinner() {
+		PlayerData p1 = new PlayerData(1);
+		PlayerData p2 = new PlayerData(2);
+		PlayerData p3 = new PlayerData(3);
+		p1.score = 7000;
+		p2.score = 8000;
+		p3.score = 9000;
+		
+		game.players[0] = p1;
+		game.players[1] = p2;
+		game.players[2] = p3;
+		int winner = game.getWinner();
+		
+		assertEquals(2, winner);
+	}
+	
+	/*
 	 * test individual Diamond and Gold score
 	 */
 	public void testDiamondGoldScore() {
