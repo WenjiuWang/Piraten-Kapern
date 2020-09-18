@@ -43,6 +43,39 @@ public class Player {
 	}
 	
 	/*
+	 * Game Logic methods
+	 */
+	public int[] rerollDice(Scanner scan) {
+		int [] result;
+		System.out.println("Please select which die(dice) to be rerolled: (1, 2, 5, ..)");
+		//keep trying until get correct input
+		while(true) {
+			int[] pos = Arrays.stream((scan.next()).replaceAll("\\s", "").split(",")).mapToInt(Integer::parseInt).toArray();
+			if (pos.length < 2) {
+				System.out.println("*** At least 2 dice are required to reroll ***");
+				System.out.println("Please select which die(dice) to be rerolled: (1, 2, 5, ..)");
+				continue;
+			}
+			//skull check for reroll pos
+			ArrayList<Integer> newDice = new ArrayList<Integer>();
+    		for (int i = 0; i < pos.length; ++i) {
+    			newDice.add(this.dice[pos[i]-1]);
+    		}
+    		int [] cleanDice = newDice.stream().mapToInt(i -> i).toArray();
+			int skullCount = Game.countObject(Object.SKULL, this.fortune, this.fortuneIndicator, cleanDice);
+		    if (skullCount == 0 || (skullCount == 1 && this.fortune == Fortune.SORCERESS)) {
+			    this.sendRequest(RequestCode.REROLL, pos);
+			    result = pos;
+		       	break;
+		     } else {
+				System.out.println("*** Based on your fortune card, you can not reroll these many skulls. ***");
+				System.out.println("Please select which die(dice) to be rerolled: (1, 2, 5, ..)");
+	         }
+		}
+		return result;
+	}
+	
+	/*
 	 * Networking
 	 */
 	public void sendRequest(RequestCode code, int[] info) {
@@ -87,6 +120,8 @@ public class Player {
 				System.out.println("Lost server connection.");
 				ex.printStackTrace();
 			}
+			Scanner scan = new Scanner(System.in);
+			int selection;
 			switch(code) {
 				case LOSE:
 					System.out.println("You Lose!");
@@ -105,6 +140,69 @@ public class Player {
 					break;
 					
 				default: //normal turn
+					//play this turn until end by 3 skull, or by player.
+					this.printDice();
+					//check if there are more than 3 skulls.
+					int skulls = Game.countObject(Object.SKULL, this.fortune, this.fortuneIndicator, this.dice);
+			        
+			        if (skulls >= 3) {
+				        this.sendRequest(RequestCode.END, this.dice);
+				       	this.score += this.turnScore;
+						//clear treasure chest
+						for (int i = 0; i < this.treasureChest.length; ++i) {
+							this.treasureChest[i] = false;
+						}
+						System.out.println("******* You got 3 skulls! Your turn is terminated. *******");
+						System.out.println("Waiting for your turn.");
+				      	break;
+			        }
+					
+					System.out.println("Please enter your selection: ");
+					System.out.println("1. Keep Rerolling");
+					System.out.println("2. End this turn and score");
+					if (this.fortune == Fortune.TREASURECHEST) {
+						System.out.println("3. Put dice in the Treasure chest");
+						System.out.println("4. Take dice out of the Treasure chest");
+					}
+					selection = scan.nextInt();
+					
+					if (selection == 1) {
+						this.rerollDice(scan);	
+					} else if (selection == 2) {
+						this.sendRequest(RequestCode.END, this.dice);
+				       	this.score += this.turnScore;
+						//clear treasure chest
+						for (int i = 0; i < this.treasureChest.length; ++i) {
+							this.treasureChest[i] = false;
+						}
+						System.out.println("Waiting for your turn.");
+					} else if (selection == 3 && this.fortune == Fortune.TREASURECHEST){
+						//Put dice in the chest 
+						System.out.println("Please select which die(dice) to be put in the chest: (1, 2, 5, ..)");
+						int[] pos = Arrays.stream((scan.next()).replaceAll("\\s", "").split(",")).mapToInt(Integer::parseInt).toArray();
+						for (int i = 0; i < pos.length; ++i) {
+							if (this.treasureChest[pos[i]-1]) {
+								System.out.println("Skip die #" + pos[i] + " cause it is already in the chest.");
+							} else {
+								this.treasureChest[pos[i]-1] = true;
+							}
+						}
+						this.sendRequest(RequestCode.PUT_IN, pos);
+					} else if (selection == 4 && this.fortune == Fortune.TREASURECHEST)  {
+						//Take dice out of the chest
+						System.out.println("Please select which die(dice) to be taken out of the chest: (1, 2, 5, ..)");
+						int[] pos = Arrays.stream((scan.next()).replaceAll("\\s", "").split(",")).mapToInt(Integer::parseInt).toArray();
+						for (int i = 0; i < pos.length; ++i) {
+							if (this.treasureChest[pos[i]-1]) {
+								this.treasureChest[pos[i]-1] = false;
+							} else {
+								System.out.println("Skip die #" + (pos[i]) + " cause it not in the chest.");
+							}
+						}
+						this.sendRequest(RequestCode.TAKE_OUT, pos);
+					} else {
+						System.out.println("Please enter a valid selection");
+					}
 					break;
 			}
 		}
