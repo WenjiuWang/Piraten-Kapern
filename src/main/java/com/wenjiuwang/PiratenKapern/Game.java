@@ -6,7 +6,8 @@ public class Game {
 
 	public Fortune fortune = Fortune.NONE;
 	public int fortuneIndicator = 0;
-		
+	PlayerData[] players = new PlayerData[3];
+
 	boolean [] treasureChest = { false, false, false, false, false, false, false, false };
 	
 	Fortune[] fortunePile = { Fortune.GOLD, Fortune.GOLD, Fortune.GOLD, Fortune.GOLD, 
@@ -51,6 +52,13 @@ public class Game {
 	/*
 	 * Game Logic - Scoring
 	 */
+	
+	public int getWinner() {
+		int winner = 0; 	
+		if (this.players[1].score > this.players[winner].score) winner = 1;
+		if (this.players[2].score > this.players[winner].score) winner = 2;
+		return winner;
+	}
 	
 	public int DiamondGoldScore(int[] dice) {
 		int diamondCount = Game.countObject(Object.DIAMOND, this.fortune, this.fortuneIndicator, dice);
