@@ -134,9 +134,49 @@ public class Player {
 					
 				case ISLAND_OF_SKULLS:
 					//Island of Skulls
+					this.printDice();
+					System.out.println("****** You are on the Island of Skulls! ******");
+					System.out.println("Please enter your selection: ");
+					System.out.println("1. Keep Rerolling");
+					System.out.println("2. End this turn and deduct points to your opponents");
+					
+					selection = scan.nextInt();		
+					if (selection == 1) {
+						int [] pos = this.rerollDice(scan);
+						//Check if NON-SKULL is rolled
+						try {
+							boolean rolledSkull = true;
+							Gamedata gd = (Gamedata) this.inStream.readObject();
+				    		for (int i = 0; i < pos.length; ++i) {
+				    			if (gd.data[pos[i]-1] != 6) {
+				    				rolledSkull = false;
+				    				break;
+				    			}
+				    		}
+				    		if (rolledSkull) {
+								int [] empty = {};
+				    			this.sendRequest(RequestCode.REROLL, empty);
+				    		} else {
+								this.sendRequest(RequestCode.END, this.dice);
+								System.out.println("Waiting for your turn.");
+				    		}
+						} catch (IOException ex) {
+							System.out.println("Lost server connection.");
+							ex.printStackTrace();
+						}
+					} else if (selection == 2) {
+						this.sendRequest(RequestCode.END, this.dice);
+						System.out.println("Waiting for your turn.");
+					} else {
+						System.out.println("Please enter a valid selection");
+					}
 					break;
 				
 				case DEDUCT:
+					System.out.println("****** You got " + this.turnScore + " points deducted by player " + this.dice[0]+  " from the Island of Skulls! ******");
+					this.score -= this.turnScore;
+					this.printInfo();
+					System.out.println("Waiting for your turn.");
 					break;
 					
 				default: //normal turn
@@ -204,8 +244,8 @@ public class Player {
 						System.out.println("Please enter a valid selection");
 					}
 					break;
+				}
 			}
-		}
 	}
 	
 	
