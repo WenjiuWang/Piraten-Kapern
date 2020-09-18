@@ -108,5 +108,22 @@ public class ScoringTest
 		assertEquals(0, game.turnTotalScore(dice4));
 	}
 	
+	public void testTurnDeductScore() {
+		int[] dice1 = { 1, 1, 1, 3, 6, 6, 6, 6}; //4 SKULLs
+
+		//No Fortune activated
+		game.fortune = Fortune.NONE;
+		assertEquals(400, game.turnDeductScore(dice1));
+		
+		game.fortune = Fortune.SKULLS;
+		game.fortuneIndicator = 2;
+		assertEquals(600, game.turnDeductScore(dice1));
+		
+		game.fortune = Fortune.CAPTAIN;
+		game.fortuneIndicator = 0;
+		assertEquals(800, game.turnDeductScore(dice1));
+
+	}
+	
 
 }
