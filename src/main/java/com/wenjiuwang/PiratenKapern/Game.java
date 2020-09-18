@@ -176,4 +176,10 @@ public class Game {
 		return score;
 	}
 	
+	public int turnDeductScore(int[] dice) {
+		int result = Game.countObject(Object.SKULL, this.fortune, this.fortuneIndicator, dice);
+		if (this.fortune == Fortune.CAPTAIN) result *= 2;
+		return result * 100;
+	}
+	
 }
