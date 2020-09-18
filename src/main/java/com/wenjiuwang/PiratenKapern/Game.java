@@ -387,35 +387,35 @@ public class Game {
 		        while(playTurn) {
 					Gamedata gd = (Gamedata) this.clients[playerNum].inStream.readObject();
 					switch(gd.code) {
-					case REROLL:
-						//re roll
-						int[] pos = gd.data;
-						curDice = this.reroll(curDice, pos);
-						this.sendRequest(playerNum, (skulls >= 4 && this.fortune != Fortune.SEABATTLE ? RequestCode.ISLAND_OF_SKULLS : RequestCode.NORMAL), curDice, 
-								(skulls >= 4 && this.fortune != Fortune.SEABATTLE ? this.turnDeductScore(curDice) : this.turnTotalScore(curDice)));
-						break;
-					case PUT_IN:
-						//Put dice in the chest 
-						for (int i = 0; i < gd.data.length; ++i) {
-							if (this.treasureChest[gd.data[i]-1]) {
-								System.out.println("Skip die #" + gd.data[i] + " cause it is already in the chest.");
-							} else {
-								this.treasureChest[gd.data[i]-1] = true;
+						case REROLL:
+							//re roll
+							int[] pos = gd.data;
+							curDice = this.reroll(curDice, pos);
+							this.sendRequest(playerNum, (skulls >= 4 && this.fortune != Fortune.SEABATTLE ? RequestCode.ISLAND_OF_SKULLS : RequestCode.NORMAL), curDice, 
+									(skulls >= 4 && this.fortune != Fortune.SEABATTLE ? this.turnDeductScore(curDice) : this.turnTotalScore(curDice)));
+							break;
+						case PUT_IN:
+							//Put dice in the chest 
+							for (int i = 0; i < gd.data.length; ++i) {
+								if (this.treasureChest[gd.data[i]-1]) {
+									System.out.println("Skip die #" + gd.data[i] + " cause it is already in the chest.");
+								} else {
+									this.treasureChest[gd.data[i]-1] = true;
+								}
 							}
-						}
-						this.sendRequest(playerNum, RequestCode.NORMAL, curDice, this.turnTotalScore(curDice));
-						break;
-					case TAKE_OUT:
-						//Take dice out of the chest
-						for (int i = 0; i < gd.data.length; ++i) {
-							if (this.treasureChest[gd.data[i]-1]) {
-								this.treasureChest[gd.data[i]-1] = false;
-							} else {
-								System.out.println("Skip die #" + gd.data[i] + " cause it not in the chest.");
+							this.sendRequest(playerNum, RequestCode.NORMAL, curDice, this.turnTotalScore(curDice));
+							break;
+						case TAKE_OUT:
+							//Take dice out of the chest
+							for (int i = 0; i < gd.data.length; ++i) {
+								if (this.treasureChest[gd.data[i]-1]) {
+									this.treasureChest[gd.data[i]-1] = false;
+								} else {
+									System.out.println("Skip die #" + gd.data[i] + " cause it not in the chest.");
+								}
 							}
-						}
-						this.sendRequest(playerNum, RequestCode.NORMAL, curDice, this.turnTotalScore(curDice));
-						break;
+							this.sendRequest(playerNum, RequestCode.NORMAL, curDice, this.turnTotalScore(curDice));
+							break;
 						default:
 							playTurn = false;
 							break;
@@ -451,11 +451,24 @@ public class Game {
 				
 				//clear fortune num
 				this.fortuneIndicator = 0;
+				
 			}
+			
+			//determine winner
+			int winner = getWinner();
+			
+			//send winner info to players, then quit.
+			for (int i = 0; i < 3; ++i) {
+				if (i == winner) {
+					this.sendRequest(i, RequestCode.WIN, curDice, 0);
+				} else {
+					this.sendRequest(i, RequestCode.LOSE, curDice, 0);
+				}
+			}
+			System.out.println("Game Over! The winner is player " + (winner + 1) + "!");
 		} catch (IOException ex) {
 			System.out.println("Disconnected");
 		}
-		
 	}
 }
 
