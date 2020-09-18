@@ -20,13 +20,43 @@ public class Player {
 	Fortune fortune = Fortune.NONE;
 	int fortuneIndicator = 0;
 	boolean [] treasureChest = { false, false, false, false, false, false, false, false };
+	
+	//networking
+	Socket socket;
+	ObjectInputStream inStream;
+	ObjectOutputStream outStream;
 
 	/*
-	 * Constructor
+	 * Constructor & Main
 	 */
 	public Player(String s) {
 		this.name = s;
 	}
+	
+	public static void main(String args[]) throws ClassNotFoundException {
+		System.out.println("Please enter the player name");
+		Scanner scan = new Scanner(System.in);
+		String name = scan.next();
+		Player player = new Player(name);
+		player.connectServer();
+	}
+	
+	/*
+	 * Networking
+	 */
+	
+	public void connectServer() {
+		System.out.println("Connecting to game server ...");
+		try {
+			this.socket = new Socket("localhost", 10140);
+			this.inStream = new ObjectInputStream(this.socket.getInputStream());
+			this.outStream = new ObjectOutputStream(this.socket.getOutputStream());
+			System.out.println("Connected.");
+		} catch (IOException ex) {
+			System.out.println("Fails to connect.");
+		}
+	}
+	
 	
 	/*
 	 * Interface

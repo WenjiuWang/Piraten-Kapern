@@ -1,5 +1,8 @@
 package com.wenjiuwang.PiratenKapern;
 
+import java.io.IOException;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -11,6 +14,7 @@ public class Game {
 	public Fortune fortune = Fortune.NONE;
 	public int fortuneIndicator = 0;
 	PlayerData[] players = new PlayerData[3];
+	
 
 	boolean [] treasureChest = { false, false, false, false, false, false, false, false };
 	
@@ -30,12 +34,24 @@ public class Game {
 	int skullCount = 0;
 	int battleCount = 0;
 	
+	//networking
+	ServerSocket serverSocket;
+
+	
 	/*
-	 * Constructor
+	 * Constructor & Main
 	 */
 	
 	public Game() {
 	}
+	
+	public static void main(String args[]) throws Exception {
+		Game game = new Game();
+		game.startServer();
+		game.shuffleFortune();
+		game.play();
+	}
+	
 	
 	/*
 	 * Game Logic methods
@@ -260,4 +276,39 @@ public class Game {
 	    this.fortuneCount = (this.fortuneCount < 34) ? this.fortuneCount += 1 : 0;
 		return f;
 	}
+	
+	/*
+	 * Networking
+	 */
+	public void startServer() {
+		System.out.println("Server initializing...");
+		try {
+			this.serverSocket = new ServerSocket(10140);
+			System.out.println("Server is now open");
+
+		} catch (IOException ex) {
+			System.out.println("Failed to open server");
+		}
+	}
+	
+	
+	/*
+	 * Game Loop - Server side
+	 */
+	private void play() throws ClassNotFoundException {
+		// connect players
+		try {
+			int playerCount = 0;
+			System.out.println("Waiting for players to join ...");
+			while(playerCount < 3) {
+				this.serverSocket.accept();
+				playerCount += 1;
+				System.out.println("A new player has joined!");
+			}
+
+		} catch (IOException ex) {
+			System.out.println("Could not connect 3 players");
+		}
+	}
 }
+
