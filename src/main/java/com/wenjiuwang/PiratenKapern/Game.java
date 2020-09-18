@@ -1,6 +1,8 @@
 package com.wenjiuwang.PiratenKapern;
 
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -15,7 +17,6 @@ public class Game {
 	public int fortuneIndicator = 0;
 	PlayerData[] players = new PlayerData[3];
 	
-
 	boolean [] treasureChest = { false, false, false, false, false, false, false, false };
 	
 	Fortune[] fortunePile = { Fortune.GOLD, Fortune.GOLD, Fortune.GOLD, Fortune.GOLD, 
@@ -36,8 +37,8 @@ public class Game {
 	
 	//networking
 	ServerSocket serverSocket;
+	Client[] clients = new Client[3];
 
-	
 	/*
 	 * Constructor & Main
 	 */
@@ -291,6 +292,38 @@ public class Game {
 		}
 	}
 	
+	public class Client implements Runnable {
+		private Socket socket;
+		private ObjectInputStream inStream;
+		private ObjectOutputStream outStream;
+		
+		@Override
+		public void run() {
+			System.out.println("Client thread running ...");
+			try {
+				while (true) {
+				}
+
+			} catch (Exception ex) {
+				{
+					System.out.println("Run failed");
+					ex.printStackTrace();
+				}
+			}
+		}
+		
+		
+		public Client(Socket s) {
+			this.socket = s;
+			try {
+				this.outStream = new ObjectOutputStream(this.socket.getOutputStream());
+				this.inStream = new ObjectInputStream(this.socket.getInputStream());
+			} catch (IOException ex) {
+				System.out.println("Client socket stream failed");
+			}
+		}
+		
+	}
 	
 	/*
 	 * Game Loop - Server side
@@ -301,14 +334,22 @@ public class Game {
 			int playerCount = 0;
 			System.out.println("Waiting for players to join ...");
 			while(playerCount < 3) {
-				this.serverSocket.accept();
+				Socket clientSocket = this.serverSocket.accept();
+				Client c = new Client(clientSocket);
+				this.clients[playerCount] = c;
+				this.players[playerCount] = new PlayerData(playerCount);
 				playerCount += 1;
 				System.out.println("A new player has joined!");
 			}
-
+				
+			for (int i = 0; i < 3; i++) {
+				Thread thread = new Thread(this.clients[i]);
+				thread.start();
+			}
 		} catch (IOException ex) {
 			System.out.println("Could not connect 3 players");
 		}
+		
 	}
 }
 
