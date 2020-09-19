@@ -125,6 +125,74 @@ public class ScoringTest
 		
 		int[] dice4 = { 3, 6, 4, 6, 3, 6, 2, 2}; // 3 skulls
 		assertEquals(0, game.turnTotalScore(dice4));
+		
+		//score no sequence but RTS includes 2 diamonds and 2 coins
+		int[] dice5 = { 1, 1, 2, 2, 4, 6, 6, 3}; // 2 diamonds and 2 coins, 2 skulls, 1 monkey, 1 parrot
+		assertEquals(400, game.turnTotalScore(dice5));
+
+		//score a sequence of 3 and nothing else in your RTS
+		int[] dice6 = { 4, 4, 4, 3, 5, 6, 6, 3}; // 3 parrot, 2 skulls, 2 monkey, 1 sword
+		assertEquals(100, game.turnTotalScore(dice6));
+
+		// score 2 distinct sequences of 3 in RTS over two rolls
+		int[] dice7 = { 4, 4, 4, 3, 3, 6, 6, 5}; // 3 parrot, 2 skulls, 2 monkey, 1 sword
+		assertEquals(100, game.turnTotalScore(dice7));
+		
+		dice7[7] = 3; // 3 parrot, 2 skulls, 3 monkey
+		assertEquals(200, game.turnTotalScore(dice7));
+		
+		// score a sequence of 3 diamonds correctly
+		int[] dice8 = { 1, 1, 1, 3, 5, 6, 6, 3}; // 3 diamond, 2 skulls, 2 monkey, 1 parrot
+		assertEquals(400, game.turnTotalScore(dice8));
+		
+		// score a sequence of 3 coins correctly
+		int[] dice9 = { 2, 2, 2, 3, 5, 6, 6, 3}; // 3 gold, 2 skulls, 2 monkey, 1 parrot
+		assertEquals(400, game.turnTotalScore(dice9));
+		
+		// score a sequence of 3 and a sequence of 4 over over several rolls
+		int[] dice10 = { 4, 4, 4, 5, 5, 3, 3, 3}; // 3 parrot, 2 sword, 3 monkey,
+		assertEquals(200, game.turnTotalScore(dice10));
+
+		dice10[5] = 5; // 3 parrot, 3 sword, 2 monkey
+		assertEquals(200, game.turnTotalScore(dice10));
+
+		dice10[6] = 5; // 3 parrot, 4 sword, 1 monkey
+		assertEquals(300, game.turnTotalScore(dice10));
+		
+		//score a sequence of 6
+		int[] dice11 = { 4, 4, 4, 4, 4, 4, 3, 6};  // 6 parrot, 1 monkey, 1 skull
+		assertEquals(1000, game.turnTotalScore(dice11));
+		
+		//score a sequence of 7
+		dice11[6] = 4; // 7 parrot, 1 skull
+		assertEquals(2000, game.turnTotalScore(dice11));
+		
+		//score a sequence of 8 over over several rolls
+		dice11[7] = 4; // 7 parrot, 1 skull
+		assertEquals(4000, game.SetsScore(dice11));
+		
+		// score a sequence of 3 that includes the fortune card COIN or DIAMOND
+		game.fortune = Fortune.GOLD;
+		int[] dice12 = { 4, 4, 5, 5, 6, 2, 2, 3};  // 2+1 gold, 1 monkey, 1 skull, 2 parrot, 2 sword
+		assertEquals(100, game.SetsScore(dice12));
+		
+		game.fortune = Fortune.DIAMOND;
+		int[] dice13 = { 4, 4, 5, 5, 6, 1, 1, 3};  // 2+1 diamond, 1 monkey, 1 skull, 2 parrot, 2 sword
+		assertEquals(100, game.SetsScore(dice13));
+		
+		// score a sequence of 4 and a sequence of 5 that includes the fortune card over several rolls
+		game.fortune = Fortune.DIAMOND;
+		int[] dice14 = { 4, 4, 5, 5, 1, 1, 1, 3};  // 3+1 diamond, 1 monkey, 2 parrot, 2 sword
+		assertEquals(200, game.SetsScore(dice14));
+		
+		dice14[7] = 1; // 4+1 diamond, 2 parrot, 2 sword
+		assertEquals(500, game.SetsScore(dice14));
+		
+		//show the captain does double the score of the RTS
+		game.fortune = Fortune.NONE;
+		assertEquals(600, game.turnTotalScore(dice14)); // 4 diamond, 2 parrot, 2 sword
+		game.fortune = Fortune.CAPTAIN;
+		assertEquals(1200, game.turnTotalScore(dice14));
 	}
 	
 	public void testTurnDeductScore() {
