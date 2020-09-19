@@ -108,8 +108,8 @@ public class Game {
         if (count[3] > 0 && count[3] < 3 && this.fortune != Fortune.MONKEYBUSINESS) return false;
         if (count[2] + count[3] > 0 && count[2] + count[3] < 3 && this.fortune == Fortune.MONKEYBUSINESS) return false;
 
-        //Sword 
-        if (count[4] > 0 && count[4] < 3) return false;
+        //Sword - 1: SEABATTLE but swords < indicator.  2: No SEABATTLE and swords < 3
+        if ((this.fortune == Fortune.SEABATTLE && this.fortuneIndicator > count[4]) || (this.fortune != Fortune.SEABATTLE && count[4] > 0 && count[4] < 3)) return false;
         
         //it's full otherwise.
 		return true;

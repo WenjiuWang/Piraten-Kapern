@@ -29,6 +29,18 @@ public class rollAndDrawTest
 		int[] rollPos1 = {1, 7, 3} ; 
 		dice1 = game.reroll(dice1, rollPos1);
 		assertEquals(6, dice1[6]); //skull should not be rerolled.
+		
+		
+		// handle sorceress (on first or subsequent roll, once and only once per turn)
+		game.fortune = Fortune.SORCERESS;
+		int[] dice2 = { 1, 1, 1, 3, 3, 4, 6, 6}; //3 diamond, 2 monkey, 1 parrot, 2 skull
+		int[] rollPos2 = {1, 8, 3} ; 
+		dice2 = game.reroll(dice2, rollPos2); //use sorceress to reroll 1 skull
+		int[] rollPos3 = {1, 7, 3} ; 
+		dice2 = game.reroll(dice2, rollPos3); //use sorceress to reroll 1 skull
+		assertEquals(6, dice2[6]); //another skull should not be rerolled, since Sorceress is consumed.
+
+		
 	}
 	
 	/*

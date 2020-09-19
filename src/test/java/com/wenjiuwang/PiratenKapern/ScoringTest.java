@@ -59,6 +59,9 @@ public class ScoringTest
 	 * test full chest
 	 */
 	public void testFullChest() {
+		// handle full chest (beyond the simple ones, try to think of interesting cases…)
+		game.fortune = Fortune.NONE;
+
 		int[] dice1 = { 1, 2, 3, 3, 3, 4, 4, 6}; //1 skull -> not full
 		assertFalse(game.isFullChest(dice1));	
 		
@@ -67,6 +70,18 @@ public class ScoringTest
 		
 		int[] dice3 = { 3, 3, 3, 3, 4, 4, 4, 3}; // full
 		assertTrue(game.isFullChest(dice3));
+		
+		game.fortune = Fortune.MONKEYBUSINESS;
+		int[] dice4 = { 3, 3, 5, 2, 5, 1, 4, 4, 5}; // full
+		assertTrue(game.isFullChest(dice4));
+		
+		game.fortune = Fortune.SEABATTLE;
+		game.fortuneIndicator = 2;
+		int[] dice5 = { 3, 3, 3, 2, 5, 4, 4, 4, 5}; // full
+		assertTrue(game.isFullChest(dice5));
+		game.fortuneIndicator = 3;
+		assertFalse(game.isFullChest(dice5)); // not full
+
 	}
 	
 	/*
@@ -90,7 +105,7 @@ public class ScoringTest
 		int[] dice2 = { 3, 3, 3, 3, 3, 4, 5, 2}; //5 monkey, 1 parrot, 1 gold, 1 sword
 		assertEquals(500, game.SetsScore(dice2));
 		
-		//Monkey Business is activated
+		// handle monkey business (ie monkey and parrots form 1 category rather than 2 distinct ones)
 		game.fortune = Fortune.MONKEYBUSINESS;
 		int[] dice3 = { 3, 3, 3, 3, 3, 4, 5, 2}; //6 monkey + parrot, 1 gold, 1 sword
 		assertEquals(1000, game.SetsScore(dice3));
@@ -193,9 +208,30 @@ public class ScoringTest
 		assertEquals(600, game.turnTotalScore(dice14)); // 4 diamond, 2 parrot, 2 sword
 		game.fortune = Fortune.CAPTAIN;
 		assertEquals(1200, game.turnTotalScore(dice14));
+		
+		// handle sea battles (success and failure)
+		game.fortune = Fortune.SEABATTLE;
+		int[] dice15 = { 3, 4, 4, 5, 5, 1, 1, 3};  // 2 diamond, 2 monkey, 2 parrot, 2 sword
+		// 2 saber 
+		game.fortuneIndicator = 2;
+		assertEquals(500, game.turnTotalScore(dice15)); // get bonus
+		
+		//3 saber
+		game.fortuneIndicator = 3;
+		assertEquals(200, game.turnTotalScore(dice15)); // no bonus
+		dice15[2] = 5; //now 3 saber -> get bonus
+		assertEquals(800, game.turnTotalScore(dice15));
+		
+		//4 saber
+		game.fortuneIndicator = 4;
+		assertEquals(300, game.turnTotalScore(dice15)); // no bonus
+		dice15[1] = 5; //now 3 saber -> get bonus
+		assertEquals(1400, game.turnTotalScore(dice15));
+
 	}
 	
 	public void testTurnDeductScore() {
+		//	handle skull island (including when used with the captain’s card)
 		int[] dice1 = { 1, 1, 1, 3, 6, 6, 6, 6}; //4 SKULLs
 
 		//No Fortune activated
