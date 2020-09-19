@@ -138,7 +138,8 @@ public class ScoringTest
 		int[] dice3 = { 3, 3, 4, 4, 3, 4, 2, 2}; //3 monkey, 3 parrot, 2 gold (full chest)
 		assertEquals(900, game.turnTotalScore(dice3));
 		
-		int[] dice4 = { 3, 6, 4, 6, 3, 6, 2, 2}; // 3 skulls
+		// die (i.e., score 0) with 3 skulls on first roll
+		int[] dice4 = { 3, 6, 4, 6, 3, 6, 2, 2}; 
 		assertEquals(0, game.turnTotalScore(dice4));
 		
 		//score no sequence but RTS includes 2 diamonds and 2 coins
@@ -227,6 +228,12 @@ public class ScoringTest
 		assertEquals(300, game.turnTotalScore(dice15)); // no bonus
 		dice15[1] = 5; //now 3 saber -> get bonus
 		assertEquals(1400, game.turnTotalScore(dice15));
+		
+		// die with 2 skulls on first roll and reroll of 1 skull
+		game.fortune = Fortune.SKULLS;
+		game.fortuneIndicator = 2;
+		int[] dice16 = { 3, 6, 6, 5, 5, 1, 1, 3};  // 2 diamond, 2 monkey, 2 skull, 2 sword
+		assertEquals(0, game.turnTotalScore(dice16));
 
 	}
 	
