@@ -21,7 +21,7 @@ public class correctionGridTest82
 			int riggedRolls[][] = 
 			    {
 			      {1, 1, 3, 3, 4, 4, 5, 5},
-			      {5, 1},
+			      {5, 6},
 			      {3, 4},
 			    };
 			RiggedGame game = new RiggedGame(s, 1, riggedRolls, Fortune.SORCERESS, 0);

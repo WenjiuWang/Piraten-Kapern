@@ -8,7 +8,8 @@ import junit.framework.TestCase;
 public class correctionGridTest40 
     extends TestCase
 {	
-	//die with 3 skulls on first roll  -> interface reports death & end of turn  
+	//showing a short game in which player1 scores 0,
+	//   player2 scores a set of 3, and player3 wins with captain and 8 swords on first roll
 	public void test40() throws ClassNotFoundException {
 		
 

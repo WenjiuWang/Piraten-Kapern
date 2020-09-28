@@ -20,7 +20,7 @@ public class correctionGridTest55
 			
 			int riggedRolls[][] = 
 			    {
-			      {3, 3, 3, 4, 4, 4, 5, 6},
+			      {3, 3, 3, 4, 5, 5, 5, 6},
 			    };
 			RiggedGame game = new RiggedGame(s, 1, riggedRolls, Fortune.GOLD, 0);
 			Thread thread = new Thread(game);

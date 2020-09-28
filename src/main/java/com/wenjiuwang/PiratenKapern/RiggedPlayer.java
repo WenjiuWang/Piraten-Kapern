@@ -5,6 +5,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 public class RiggedPlayer extends Player implements Runnable{
 	
@@ -50,6 +51,7 @@ public class RiggedPlayer extends Player implements Runnable{
 		//keep trying until get correct input
 		while(true) {
 			int[] pos = this.mockInputs[this.inputCount];
+			System.out.println(Arrays.toString(pos));
 			this.inputCount += 1;
 			if (pos.length < 2) {
 				System.out.println("*** At least 2 dice are required to reroll ***");
@@ -111,6 +113,7 @@ public class RiggedPlayer extends Player implements Runnable{
 					System.out.println("2. End this turn and deduct points to your opponents");
 					
 					selection = this.mockInputs[this.inputCount][0];
+					System.out.println(selection);
 					this.inputCount += 1;
 					if (selection == 1) {
 						int [] pos = this.rerollDice();
@@ -177,6 +180,7 @@ public class RiggedPlayer extends Player implements Runnable{
 					}
 					
 					selection = this.mockInputs[inputCount][0];
+					System.out.println(selection);
 					inputCount += 1;
 					
 					if (selection == 1) {
@@ -193,6 +197,8 @@ public class RiggedPlayer extends Player implements Runnable{
 						//Put dice in the chest 
 						System.out.println("Please select which die(dice) to be put in the chest: (1, 2, 5, ..)");
 						int[] pos = this.mockInputs[this.inputCount];
+						System.out.println(pos.toString());
+
 						this.inputCount += 1;
 						for (int i = 0; i < pos.length; ++i) {
 							if (this.treasureChest[pos[i]-1]) {
@@ -206,6 +212,8 @@ public class RiggedPlayer extends Player implements Runnable{
 						//Take dice out of the chest
 						System.out.println("Please select which die(dice) to be taken out of the chest: (1, 2, 5, ..)");
 						int[] pos = this.mockInputs[this.inputCount];
+						System.out.println(pos.toString());
+
 						this.inputCount += 1;
 						for (int i = 0; i < pos.length; ++i) {
 							if (this.treasureChest[pos[i]-1]) {
