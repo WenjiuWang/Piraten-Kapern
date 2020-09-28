@@ -3,54 +3,54 @@ package com.wenjiuwang.PiratenKapern;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Scanner;
 
-import sun.java2d.windows.GDIBlitLoops;
-
-public class Player {
-	int id;
-	String name;
-	int[] dice;
-	int score = 0;
-	int turnScore = 0;
-	Fortune fortune = Fortune.NONE;
-	int fortuneIndicator = 0;
-	boolean [] treasureChest = { false, false, false, false, false, false, false, false };
+public class RiggedPlayer extends Player implements Runnable{
 	
-	//networking
-	Socket socket;
-	ObjectInputStream inStream;
-	ObjectOutputStream outStream;
-
-	/*
-	 * Constructor & Main
-	 */
-	public Player(String s) {
-		this.name = s;
-	}
-	
-	public static void main(String args[]) throws ClassNotFoundException {
-		System.out.println("Please enter the player name");
-		Scanner scan = new Scanner(System.in);
-		String name = scan.next();
-		Player player = new Player(name);
-		player.connectServer();
-		player.playGame();
-	}
+	int[][] mockInputs;
+	int inputCount = 0;
+	int port;
 	
 	/*
-	 * Game Logic methods
+	 * Constructor
 	 */
-	public int[] rerollDice(Scanner scan) {
+	public RiggedPlayer(int p, String s, int[][] c) throws ClassNotFoundException {
+		super(s);
+		this.port = p;
+		this.mockInputs = c;
+	}
+	
+	@Override
+	public void run() {
+		try {
+			this.connectServer();
+			this.playGame();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	@Override
+	public void connectServer() {
+		System.out.println("Connecting to game server ...");
+		try {
+			this.socket = new Socket("localhost", this.port);
+			this.inStream = new ObjectInputStream(this.socket.getInputStream());
+			this.outStream = new ObjectOutputStream(this.socket.getOutputStream());
+			System.out.println("Connected.");
+		} catch (IOException ex) {
+			System.out.println("Fails to connect.");
+		}
+	}
+	
+	public int[] rerollDice() {
 		int [] result;
 		System.out.println("Please select which die(dice) to be rerolled: (1, 2, 5, ..)");
 		//keep trying until get correct input
 		while(true) {
-			int[] pos = Arrays.stream((scan.next()).replaceAll("\\s", "").split(",")).mapToInt(Integer::parseInt).toArray();
+			int[] pos = this.mockInputs[this.inputCount];
+			this.inputCount += 1;
 			if (pos.length < 2) {
 				System.out.println("*** At least 2 dice are required to reroll ***");
 				System.out.println("Please select which die(dice) to be rerolled: (1, 2, 5, ..)");
@@ -62,7 +62,7 @@ public class Player {
     			newDice.add(this.dice[pos[i]-1]);
     		}
     		int [] cleanDice = newDice.stream().mapToInt(i -> i).toArray();
-			int skullCount = Game.countObject(Object.SKULL, this.fortune, this.fortuneIndicator, cleanDice);
+			int skullCount = Game.countObject(Object.SKULL, Fortune.NONE, 0, cleanDice);
 		    if (skullCount == 0 || (skullCount == 1 && this.fortune == Fortune.SORCERESS)) {
 			    this.sendRequest(RequestCode.REROLL, pos);
 			    result = pos;
@@ -75,35 +75,6 @@ public class Player {
 		return result;
 	}
 	
-	/*
-	 * Networking
-	 */
-	public void sendRequest(RequestCode code, int[] info) {
-		try {
-			Gamedata data = new Gamedata(code, this.fortune, this.fortuneIndicator, info, this.turnScore);
-        	this.outStream.writeObject(data);
-       		this.outStream.flush();
-       	} catch (IOException ex) {
-			System.out.println("Failed to send request to server");
-			ex.printStackTrace();
-		}
-	}
-	
-	public void connectServer() {
-		System.out.println("Connecting to game server ...");
-		try {
-			this.socket = new Socket("localhost", 10140);
-			this.inStream = new ObjectInputStream(this.socket.getInputStream());
-			this.outStream = new ObjectOutputStream(this.socket.getOutputStream());
-			System.out.println("Connected.");
-		} catch (IOException ex) {
-			System.out.println("Fails to connect.");
-		}
-	}
-	
-	/*
-	 * Game Loop - Player side
-	 */
 	private void playGame() throws ClassNotFoundException {
 		boolean playing = true;
 		while (playing) {
@@ -120,7 +91,6 @@ public class Player {
 				System.out.println("Lost server connection.");
 				ex.printStackTrace();
 			}
-			Scanner scan = new Scanner(System.in);
 			int selection;
 			switch(code) {
 				case LOSE:
@@ -140,24 +110,25 @@ public class Player {
 					System.out.println("1. Keep Rerolling");
 					System.out.println("2. End this turn and deduct points to your opponents");
 					
-					selection = scan.nextInt();		
+					selection = this.mockInputs[this.inputCount][0];
+					this.inputCount += 1;
 					if (selection == 1) {
-						int [] pos = this.rerollDice(scan);
+						int [] pos = this.rerollDice();
 						//Check if NON-SKULL is rolled
 						try {
-							boolean rolledSkull = true;
+							int rolledSkull = 0;
 							Gamedata gd = (Gamedata) this.inStream.readObject();
 				    		for (int i = 0; i < pos.length; ++i) {
-				    			if (gd.data[pos[i]-1] != 6) {
-				    				rolledSkull = false;
-				    				break;
+				    			if (gd.data[pos[i]-1] == 6) {
+				    				rolledSkull += 1;
 				    			}
 				    		}
-				    		if (rolledSkull) {
+				    		if (rolledSkull >= 1) {
 								int [] empty = {};
 				    			this.sendRequest(RequestCode.REROLL, empty);
 				    		} else {
 								this.sendRequest(RequestCode.END, this.dice);
+								System.out.println("You didn't get a single skull!");
 								System.out.println("Waiting for your turn.");
 				    		}
 						} catch (IOException ex) {
@@ -173,7 +144,7 @@ public class Player {
 					break;
 				
 				case DEDUCT:
-					System.out.println("****** You got " + this.turnScore + " points deducted by player " + (this.dice[0] + 1) +  " from the Island of Skulls! ******");
+					System.out.println("****** You got " + this.turnScore + " points deducted by player " + (this.dice[0]+1) +  " from the Island of Skulls! ******");
 					this.score = (this.score - this.turnScore) < 0 ? 0 : this.score - this.turnScore;
 					this.printInfo();
 					System.out.println("Waiting for your turn.");
@@ -204,10 +175,12 @@ public class Player {
 						System.out.println("3. Put dice in the Treasure chest");
 						System.out.println("4. Take dice out of the Treasure chest");
 					}
-					selection = scan.nextInt();
+					
+					selection = this.mockInputs[inputCount][0];
+					inputCount += 1;
 					
 					if (selection == 1) {
-						this.rerollDice(scan);	
+						this.rerollDice();	
 					} else if (selection == 2) {
 						this.sendRequest(RequestCode.END, this.dice);
 						this.score = (this.score + this.turnScore) < 0 ? 0 : this.score + this.turnScore;
@@ -219,7 +192,8 @@ public class Player {
 					} else if (selection == 3 && this.fortune == Fortune.TREASURECHEST){
 						//Put dice in the chest 
 						System.out.println("Please select which die(dice) to be put in the chest: (1, 2, 5, ..)");
-						int[] pos = Arrays.stream((scan.next()).replaceAll("\\s", "").split(",")).mapToInt(Integer::parseInt).toArray();
+						int[] pos = this.mockInputs[this.inputCount];
+						this.inputCount += 1;
 						for (int i = 0; i < pos.length; ++i) {
 							if (this.treasureChest[pos[i]-1]) {
 								System.out.println("Skip die #" + pos[i] + " cause it is already in the chest.");
@@ -231,7 +205,8 @@ public class Player {
 					} else if (selection == 4 && this.fortune == Fortune.TREASURECHEST)  {
 						//Take dice out of the chest
 						System.out.println("Please select which die(dice) to be taken out of the chest: (1, 2, 5, ..)");
-						int[] pos = Arrays.stream((scan.next()).replaceAll("\\s", "").split(",")).mapToInt(Integer::parseInt).toArray();
+						int[] pos = this.mockInputs[this.inputCount];
+						this.inputCount += 1;
 						for (int i = 0; i < pos.length; ++i) {
 							if (this.treasureChest[pos[i]-1]) {
 								this.treasureChest[pos[i]-1] = false;
@@ -247,50 +222,4 @@ public class Player {
 				}
 			}
 	}
-	
-	
-	/*
-	 * Interface
-	 */
-	public void printInfo() {
-		System.out.println("|------------------------------------------------------------|");
-		System.out.println("|                                                            |");
-		System.out.println("| PLAYER: " + this.name + " | Total Score: " + this.score);
-		System.out.println("|                                                            |");
-		System.out.println("|------------------------------------------------------------|");
-		System.out.println("|                                                            |");
-		System.out.println("| Fortune Card Active: " + this.fortune.name() + (this.fortuneIndicator == 0 ? "" : " - " + this.fortuneIndicator));
-		System.out.println("|                                                            |");
-		System.out.println("|------------------------------------------------------------|");
-	}
-
-	public void printDice() {
-		System.out.println("|------------------------------------------------------------|");
-		System.out.println("| Current Dice Rolled:                                       |");
-		System.out.println("|                                                            |");
-		System.out.println("| 1: " + Object.values()[this.dice[0]-1].name() + " | 2: " + Object.values()[this.dice[1]-1].name() + " | 3: " + Object.values()[this.dice[2]-1].name() + " | 4:  " + Object.values()[this.dice[3]-1].name());
-		System.out.println("|                                                            |");
-		System.out.println("| 5: " + Object.values()[this.dice[4]-1].name() + " | 6: " + Object.values()[this.dice[5]-1].name() + " | 7: " + Object.values()[this.dice[6]-1].name() + " | 8:  " + Object.values()[this.dice[7]-1].name());
-		System.out.println("|                                                            |");
-		System.out.println("| Current Rolled Score: " + this.turnScore);
-		System.out.println("|------------------------------------------------------------|");
-		if (this.fortune == Fortune.TREASURECHEST) printChest();
-	}
-	
-	public void printChest() {
-		System.out.println("|------------------------------------------------------------|");
-		System.out.println("| Current Dice in Treasure Chest:                            |");
-		System.out.println("|                                                            |");
-		for (int i = 0; i < this.treasureChest.length; ++i) {
-			if (this.treasureChest[i]) {
-				System.out.print("| " + (i+1) + ": " + Object.values()[this.dice[i]-1].name() + " ");
-			}
-		}
-		System.out.println("|                                                            |");
-		System.out.println("|------------------------------------------------------------|");
-
-	}
-	
-
-
 }

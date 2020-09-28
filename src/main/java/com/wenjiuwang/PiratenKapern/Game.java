@@ -171,10 +171,25 @@ public class Game {
 	}
 	
 	public int turnTotalScore(int[] dice) {
+		
 		int skulls = Game.countObject(Object.SKULL, this.fortune, this.fortuneIndicator, dice);
 		int swords = Game.countObject(Object.SWORD, this.fortune, this.fortuneIndicator, dice);
+		
+        //Diamond and Gold score + set score
+        int score = 0;
+		
+		//Sea battle PENALTY
+		if (this.fortune == Fortune.SEABATTLE && swords < this.fortuneIndicator) {
+			if (this.fortuneIndicator == 2) {
+				score -= 300;
+			} else if (this.fortuneIndicator == 3) {
+				score -= 500;
+			} else {
+				score -= 1000;
+			}
+		} 
         
-        //no score for 3 skulls!
+        //3 skulls
         if (skulls >= 3) {
         	// if treasure chest
         	if (this.fortune == Fortune.TREASURECHEST) {
@@ -187,11 +202,13 @@ public class Game {
         		 int [] cleanDice = newDice.stream().mapToInt(i -> i).toArray();
         		 return this.DiamondGoldScore(cleanDice) + this.SetsScore(cleanDice);
         	} else {
-        		return 0;
+        		return score;
         	}
         }
-        //Diamond and Gold score + set score
-        int score = DiamondGoldScore(dice) + SetsScore(dice);
+        
+        //Diamond & Gold.
+        score = DiamondGoldScore(dice) + SetsScore(dice);
+
 
         //Full chest bonus
 		score += isFullChest(dice) ? 500 : 0;
@@ -206,6 +223,8 @@ public class Game {
 				score += 1000;
 			}
 		}
+		
+
 		
 		//Captain bonus
 		score = (this.fortune == Fortune.CAPTAIN) ? score *2 : score;
@@ -293,9 +312,9 @@ public class Game {
 	}
 	
 	public class Client implements Runnable {
-		private Socket socket;
-		private ObjectInputStream inStream;
-		private ObjectOutputStream outStream;
+		Socket socket;
+		ObjectInputStream inStream;
+		ObjectOutputStream outStream;
 		
 		@Override
 		public void run() {
