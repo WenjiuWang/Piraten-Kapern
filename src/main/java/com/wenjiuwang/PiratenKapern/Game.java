@@ -136,6 +136,9 @@ public class Game {
 			case 8:
 				score = 4000;
 				break;
+			case 9:
+				score = 4000;
+				break;
 			default:
 				score = 0;
 				break;
